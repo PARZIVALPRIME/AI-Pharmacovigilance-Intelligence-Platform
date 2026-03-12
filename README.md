@@ -12,7 +12,7 @@ This platform simulates real-world pharmaceutical safety operations, specificall
 
 ---
 
-## ✨ Key Features (JD-Aligned)
+## ✨ Key Features 
 
 ### 📊 Aggregate Reports & Risk Management (AR&RM)
 - **Automated Report Generation**: One-click generation of **PSUR (Periodic Safety Update Reports)**, **PBRER**, and **DSUR** in PDF, Excel, and JSON formats.
