@@ -1,0 +1,80 @@
+version: '3.9'
+
+services:
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: production
+    container_name: pharmai-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - pharmai-data:/app/data
+      - pharmai-logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///./data/pharmacovigilance.db
+      - APP_ENV=production
+      - API_PORT=8000
+    command: uvicorn api_gateway.main:app --host 0.0.0.0 --port 8000 --workers 2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - pharmai-net
+
+  # ── Dashboard ────────────────────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      target: production
+    container_name: pharmai-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - pharmai-data:/app/data
+      - pharmai-logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///./data/pharmacovigilance.db
+      - APP_ENV=production
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - pharmai-net
+
+  # ── Pipeline Runner (one-off job) ─────────────────────────────────────────
+  pipeline:
+    build:
+      context: .
+      target: production
+    container_name: pharmai-pipeline
+    volumes:
+      - pharmai-data:/app/data
+      - pharmai-logs:/app/logs
+    environment:
+      - DATABASE_URL=sqlite:///./data/pharmacovigilance.db
+    command: python pipelines/pipeline_orchestrator.py full --n-records 10000
+    depends_on:
+      - api
+    restart: "no"
+    networks:
+      - pharmai-net
+    profiles:
+      - init
+
+volumes:
+  pharmai-data:
+    driver: local
+  pharmai-logs:
+    driver: local
+
+networks:
+  pharmai-net:
+    driver: bridge
