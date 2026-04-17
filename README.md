@@ -96,6 +96,4 @@ This platform is designed to support compliance with **ICH E2C (R2)** and **ICH 
 - **Data**: Pandas, NumPy, SciPy
 - **DevOps**: Docker, Loguru, Pytest
 
----
 
-Developed by the PharmaAI Team.
